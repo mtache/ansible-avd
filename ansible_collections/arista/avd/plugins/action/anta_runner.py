@@ -7,7 +7,6 @@ import json
 from ansible.plugins.action import ActionBase
 from anta.inventory.models import InventoryDevice
 from anta.result_manager import ResultManager
-from anta.tests.software import VerifyEOSExtensions
 
 
 class ActionModule(ActionBase):
@@ -17,9 +16,7 @@ class ActionModule(ActionBase):
 
         result = super().run(tmp, task_vars)
 
-        # tests_catalog = task_vars["anta_catalog"]["anta_catalog"]
-
-        params = {
+        device_params = {
             "name": task_vars["inventory_hostname"],
             "host": task_vars["ansible_host"],
             "username": task_vars["ansible_user"],
@@ -29,16 +26,18 @@ class ActionModule(ActionBase):
         }
 
         try:
-            anta_device = InventoryDevice(**params)
-            test = VerifyEOSExtensions(device=anta_device, from_ansible=True)
-
-            for index, command in enumerate(test.instance_commands):
-                response = anta_device.session.send_request(command.command, version=command.version, output=command.ofmt)
-                data = json.loads(response)
-                test.instance_commands[index].output = data
+            anta_device = InventoryDevice(**device_params)
+            tests_catalog = task_vars["anta_catalog"]["anta_catalog"]
 
             test_results = []
-            test_results.append(test.test())
+            for test_class, test_params in tests_catalog:
+                test_instance = test_class(device=anta_device, from_ansible=True)
+                for index, command in enumerate(test_instance.instance_commands):
+                    response = anta_device.session.send_request(command.command, version=command.version, output=command.ofmt)
+                    data = json.loads(response) if command.ofmt == "json" else response
+                    test_instance.instance_commands[index].output = data
+
+                test_results.append(test_instance.test(**test_params))
 
             results = ResultManager()
 

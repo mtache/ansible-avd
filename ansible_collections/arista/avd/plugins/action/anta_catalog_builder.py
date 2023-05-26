@@ -93,7 +93,7 @@ class ActionModule(ActionBase):
             tests_catalog = parse_catalog(new_catalog)
 
             result["changed"] = True
-            result["anta_catalog"] = tests_catalog
+            result["anta_catalog"] = tests_catalog  # Should return a list of tuples
 
         except Exception as e:
             result["failed"] = True
