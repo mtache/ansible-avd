@@ -64,13 +64,25 @@
     existing_catalog: "{{ existing_catalog }}"
   delegate_to: localhost
   run_once: true
-  register: catalog
+  register: anta_catalog
   tags:
     - always
 
 - name: Display ANTA catalog
   debug:
-    var: catalog
+    var: anta_catalog
+  tags:
+    - debug
+
+- name: Run ANTA
+  arista.avd.anta_runner:
+  register: anta_results
+  tags:
+    - always
+
+- name: Display ANTA results
+  debug:
+    var: anta_results
   tags:
     - debug
 

@@ -5,6 +5,7 @@ __metaclass__ = type
 from typing import Any, Dict, List, Tuple
 
 from ansible.plugins.action import ActionBase
+from anta.loader import parse_catalog
 
 TestTuple = Tuple[str, Dict[str, str]]
 Catalog = Dict[str, List[Dict[str, Any]]]
@@ -89,8 +90,10 @@ class ActionModule(ActionBase):
             if existing_catalog:
                 new_catalog = _merge_catalogs(new_catalog, existing_catalog)
 
+            tests_catalog = parse_catalog(new_catalog)
+
             result["changed"] = True
-            result["anta_catalog"] = new_catalog
+            result["anta_catalog"] = tests_catalog
 
         except Exception as e:
             result["failed"] = True
