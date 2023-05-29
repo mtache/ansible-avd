@@ -81,8 +81,9 @@ class ActionModule(ActionBase):
             task_vars = {}
 
         result = super().run(tmp, task_vars)
+        del tmp  # tmp no longer has any effect
 
-        existing_catalog = self._task.args.get("existing_catalog", None)
+        existing_catalog = self._task.args.get("input_catalog", None)
 
         try:
             new_catalog = _build_new_catalog(task_vars, AVD_MAPPING)
@@ -93,7 +94,8 @@ class ActionModule(ActionBase):
             tests_catalog = parse_catalog(new_catalog)
 
             result["changed"] = True
-            result["anta_catalog"] = tests_catalog  # Should return a list of tuples
+            # FIXME: Return a list of tuples instead of list of lists
+            result["anta_catalog"] = tests_catalog
 
         except Exception as e:
             result["failed"] = True

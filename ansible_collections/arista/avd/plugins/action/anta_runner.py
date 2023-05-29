@@ -15,6 +15,7 @@ class ActionModule(ActionBase):
             task_vars = {}
 
         result = super().run(tmp, task_vars)
+        del tmp  # tmp no longer has any effect
 
         device_params = {
             "name": task_vars["inventory_hostname"],
@@ -28,8 +29,8 @@ class ActionModule(ActionBase):
         try:
             anta_device = InventoryDevice(**device_params)
             tests_catalog = task_vars["anta_catalog"]["anta_catalog"]
+            results = ResultManager()
 
-            test_results = []
             for test_class, test_params in tests_catalog:
                 test_instance = test_class(device=anta_device, from_ansible=True)
                 for index, command in enumerate(test_instance.instance_commands):
@@ -37,14 +38,10 @@ class ActionModule(ActionBase):
                     data = json.loads(response) if command.ofmt == "json" else response
                     test_instance.instance_commands[index].output = data
 
-                test_results.append(test_instance.test(**test_params))
-
-            results = ResultManager()
-
-            results.add_test_results(test_results)
+                results.add_test_result(test_instance.test(**test_params))
 
             result["changed"] = True
-            result["anta_results"] = json.loads(results.get_results(output_format="json"))
+            result["results"] = json.loads(results.get_results(output_format="json"))
 
         except Exception as e:
             result["failed"] = True

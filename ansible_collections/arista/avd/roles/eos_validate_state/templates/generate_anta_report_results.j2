@@ -1,0 +1,24 @@
+{# j2lint: disable=V1 #}
+{# AVD State Validation Report #}
+eos_validate_state_report:
+{% set test_id = namespace(value=0) %}
+{% set copy_hostvars = namespace(hostvars) %}
+{% for node in groups[fabric_name] | arista.avd.natural_sort %}
+{# ANTA Results #}
+{%     if copy_hostvars[node].anta_results is arista.avd.defined %}
+{%         for anta_result in copy_hostvars[node].anta_results.results %}
+{%             set test_id.value = test_id.value + 1 %}
+- id: {{ test_id.value }}
+  device: "{{ anta_result.name }}"
+  test_category: "{{ anta_result.test_category }}"
+  test_description: "{{ anta_result.test_description }}"
+  test: "{{ anta_result.test }}"
+{%             if anta_result.result is arista.avd.defined("success") %}
+  result: "PASS"
+{%             else %}
+  result: "FAIL"
+  failure_reason: "{{ anta_result.messages }}"
+{%             endif %}
+{%         endfor %}
+{%     endif %}
+{% endfor %}

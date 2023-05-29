@@ -52,39 +52,36 @@
 
 - name: Include existing ANTA catalog
   ansible.builtin.include_vars:
-    file: "/home/cbaillar/git_projects/arista-customers/CN/anta/test_catalog.yaml"
-    name: existing_catalog
+    file: "{{ input_catalog_path }}"
+    name: input_catalog
   delegate_to: localhost
+  when: input_catalog_path is defined
   run_once: true
   tags:
-    - always
+    - anta
 
 - name: Generate ANTA catalog
   arista.avd.anta_catalog_builder:
-    existing_catalog: "{{ existing_catalog }}"
+    input_catalog: "{{ input_catalog | default(None) }}"
   delegate_to: localhost
   run_once: true
   register: anta_catalog
   tags:
-    - always
-
-- name: Display ANTA catalog
-  debug:
-    var: anta_catalog
-  tags:
-    - debug
+    - anta
 
 - name: Run ANTA
   arista.avd.anta_runner:
   register: anta_results
+  when: not anta_catalog.failed
   tags:
-    - always
+    - anta
 
 - name: Display ANTA results
   debug:
     var: anta_results
   tags:
     - debug
+    - never
 
 - name: Gather EOS platform and version details
   arista.eos.eos_command:
