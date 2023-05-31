@@ -50,34 +50,16 @@
   tags:
     - always
 
-- name: Include existing ANTA catalog
-  ansible.builtin.include_vars:
-    file: "{{ input_catalog_path }}"
-    name: input_catalog
-  delegate_to: localhost
-  when: input_catalog_path is defined
-  run_once: true
-  tags:
-    - anta
-
-- name: Generate ANTA catalog
-  arista.avd.anta_catalog_builder:
-    input_catalog: "{{ input_catalog | default(None) }}"
-  delegate_to: localhost
-  run_once: true
-  register: anta_catalog
-  tags:
-    - anta
 
 - name: Run ANTA
   arista.avd.anta_runner:
+    catalog_path: "{{ catalog_path }}"
   register: anta_results
-  when: not anta_catalog.failed
   tags:
     - anta
 
 - name: Display ANTA results
-  debug:
+  ansible.builtin.debug:
     var: anta_results
   tags:
     - debug
