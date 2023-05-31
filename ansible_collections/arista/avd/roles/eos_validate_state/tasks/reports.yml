@@ -1,22 +1,14 @@
 ---
 
 # Validation reports
-- name: Generate ANTA Results (Set eos_validate_state_report)
-  arista.avd.yaml_templates_to_facts:
-    templates:
-      - template: generate_anta_report_results.j2
-  delegate_to: localhost
-  run_once: true
-  tags:
-    - anta
 
 - name: Generate Results (Set eos_validate_state_report)
   arista.avd.yaml_templates_to_facts:
     templates:
       - template: generate_state_report_results.j2
+      - template: generate_anta_report_results.j2
   delegate_to: localhost
   run_once: true
-  when: '"anta" not in ansible_run_tags'
   tags:
     - always
     - report

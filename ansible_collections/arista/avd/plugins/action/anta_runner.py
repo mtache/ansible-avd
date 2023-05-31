@@ -20,6 +20,11 @@ class ActionModule(ActionBase):
         result = super().run(tmp, task_vars)
         del tmp  # tmp no longer has any effect
 
+        play_context = self._play_context
+        connection = self._connection.httpapi
+
+        # Need to set the right become_context to the _connection.httpapi object
+        connection.set_become(play_context)
         """
         NOTE: For now, these parameters are needed to instantiate InventoryDevice
         but only "name" and "session" are actually used by the class instance when using httpapi connection.
@@ -30,7 +35,7 @@ class ActionModule(ActionBase):
             "username": task_vars["ansible_user"],
             "password": task_vars["ansible_httpapi_password"],
             "port": 443,
-            "session": self._connection.httpapi,
+            "session": connection,
         }
 
         try:

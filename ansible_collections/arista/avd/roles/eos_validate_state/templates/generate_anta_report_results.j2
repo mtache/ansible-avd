@@ -5,7 +5,7 @@ eos_validate_state_report:
 {% set copy_hostvars = namespace(hostvars) %}
 {% for node in groups[fabric_name] | arista.avd.natural_sort %}
 {# ANTA Results #}
-{%     if copy_hostvars[node].anta_results is arista.avd.defined %}
+{%     if "anta" in ansible_run_tags and copy_hostvars[node].anta_results is arista.avd.defined %}
 {%         for anta_result in copy_hostvars[node].anta_results.results %}
 {%             set test_id.value = test_id.value + 1 %}
 - id: {{ test_id.value }}
