@@ -6,6 +6,7 @@ import json
 
 from ansible.errors import AnsibleActionFail
 from ansible.plugins.action import ActionBase
+from anta.cli.utils import setup_logging
 from anta.inventory.models import InventoryDeviceHttpApi
 from anta.loader import parse_catalog
 from anta.result_manager import ResultManager
@@ -32,6 +33,11 @@ class ActionModule(ActionBase):
         }
 
         try:
+            # Setup ANTA logging
+            anta_logging = task_vars.get("anta_logging")
+            if anta_logging:
+                setup_logging(level=anta_logging)
+
             # Creating the ANTA device object with the HttpApi interface
             anta_device = InventoryDeviceHttpApi(**device_params)
 
@@ -61,9 +67,15 @@ class ActionModule(ActionBase):
                 else:
                     results.add_test_result(test_instance.test(**test_params))
 
+            data = json.loads(results.get_results(output_format="json"))
+
+            # Format the data properly for the report
+            for item in data:
+                item["test_category"] = ", ".join([category.upper() if len(category) <= 5 else category.title() for category in item["test_category"]])
+                item["messages"] = "\n".join(item["messages"])
+
             result["changed"] = True
-            # FIXME: Need to parse the results for the report
-            result["results"] = json.loads(results.get_results(output_format="json"))
+            result["results"] = data
 
         except Exception as e:
             result["failed"] = True
