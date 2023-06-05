@@ -12,6 +12,8 @@ from anta.loader import parse_catalog
 from anta.result_manager import ResultManager
 from yaml import safe_load
 
+from ansible_collections.arista.avd.plugins.plugin_utils.eos_validate_state_utils import update_catalog
+
 
 class ActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):
@@ -36,35 +38,34 @@ class ActionModule(ActionBase):
             # Creating the ANTA device object with the HttpApi interface
             anta_device = InventoryDeviceHttpApi(session=connection)
 
-            # Creating the catalog from Ansible task
+            # Creating the catalog from the Ansible task
             catalog_path = self._task.args.get("catalog_path")
             with open(catalog_path, "r", encoding="UTF-8") as file:
                 input_catalog = safe_load(file)
 
+            # Raises error if the provided ANTA test catalog is empty
             if not input_catalog:
                 raise AnsibleActionFail(f"No tests were provided in the catalog: {catalog_path}")
 
-            tests_catalog = parse_catalog(input_catalog)
+            # In ANTA, tests requiring parameters are "skipped" if they are not provided or not found in task_vars
+            updated_catalog = update_catalog(input_catalog, task_vars)
 
+            # Parsing the updated test catalog to be consumed by ANTA
+            tests_catalog = parse_catalog(updated_catalog)
+
+            # Creating the ANTA ResultManager object
             results = ResultManager()
 
             for test_class, test_params in tests_catalog:
-                # sync is a new attribute to run ANTA tests synchronously.
+                # sync is a new attribute to run tests synchronously within ANTA
                 test_instance = test_class(device=anta_device, sync=True)
+                # Adding all test results to the ResultManager object
+                results.add_test_result(test_instance.test(**test_params))
 
-                # Tests requiring input parameters will extract them from task_vars.
-                # If ALL parameters are not found in task_vars, tests will run with the parameters from the input_catalog file.
-                # In ANTA, tests requiring parameters are "skipped" if any of the parameters are not provided.
-                if hasattr(test_class, "extract_parameters"):
-                    extracted_params = test_class.extract_parameters(task_vars)
-                    if not all(v is None for v in extracted_params.values()):
-                        results.add_test_result(test_instance.test(**extracted_params))
-                else:
-                    results.add_test_result(test_instance.test(**test_params))
-
+            # Getting the results from ANTA in JSON format and convert them to a dictionary
             data = json.loads(results.get_results(output_format="json"))
 
-            # Format the data properly for the report
+            # Format the data properly for the eos_validate_state report
             for item in data:
                 item["test_category"] = ", ".join([category.upper() if len(category) <= 5 else category.title() for category in item["test_category"]])
                 item["messages"] = "\n".join(item["messages"])
