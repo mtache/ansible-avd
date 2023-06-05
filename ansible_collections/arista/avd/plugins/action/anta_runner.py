@@ -27,11 +27,6 @@ class ActionModule(ActionBase):
         # Need to set the right become_context to the _connection.httpapi object
         connection.set_become(play_context)
 
-        device_params = {
-            "name": task_vars["inventory_hostname"],
-            "session": connection,
-        }
-
         try:
             # Setup ANTA logging
             anta_logging = task_vars.get("anta_logging")
@@ -39,7 +34,7 @@ class ActionModule(ActionBase):
                 setup_logging(level=anta_logging)
 
             # Creating the ANTA device object with the HttpApi interface
-            anta_device = InventoryDeviceHttpApi(**device_params)
+            anta_device = InventoryDeviceHttpApi(session=connection)
 
             # Creating the catalog from Ansible task
             catalog_path = self._task.args.get("catalog_path")
