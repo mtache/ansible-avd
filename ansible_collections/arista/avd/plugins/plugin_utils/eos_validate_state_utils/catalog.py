@@ -62,6 +62,8 @@ def update_catalog(input_catalog: dict, task_vars: dict) -> dict:
     for tests in input_catalog.values():
         for test in tests:
             if (test_name := list(test.keys())[0]) in mapping:
+                if test[test_name] is None:
+                    test[test_name] = {}
                 for param, value in mapping[test_name].items():
                     test[test_name][param] = value
 
