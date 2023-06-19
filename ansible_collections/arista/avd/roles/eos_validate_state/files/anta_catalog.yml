@@ -1,0 +1,6 @@
+---
+# Default ANTA test catalog
+anta.tests.system:
+  - VerifyNTP:
+  - VerifyCPUUtilization:
+  - VerifyMemoryUtilization:

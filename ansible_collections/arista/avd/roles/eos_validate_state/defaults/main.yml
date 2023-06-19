@@ -38,3 +38,9 @@ structured_dir_name: 'structured_configs'
 structured_dir: '{{ output_dir }}/{{ structured_dir_name }}'
 
 avd_structured_config_file_format: "yml"
+
+# ANTA default catalog path
+anta_catalog_name: 'anta_catalog.yml'
+anta_catalog_path: '{{ role_path }}/files/{{ anta_catalog_name }}'
+
+anta_catalog: null

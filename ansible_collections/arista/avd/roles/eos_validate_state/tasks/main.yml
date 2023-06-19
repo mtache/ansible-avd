@@ -53,7 +53,8 @@
 
 - name: Run ANTA
   arista.avd.anta_runner:
-    catalog_path: "{{ catalog_path }}"
+    anta_catalog_path: "{{ anta_catalog_path }}"
+    anta_catalog: "{{ anta_catalog }}"
   register: anta_results
   tags:
     - anta

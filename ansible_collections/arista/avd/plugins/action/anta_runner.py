@@ -31,21 +31,25 @@ class ActionModule(ActionBase):
 
         try:
             # Setup ANTA logging
-            anta_logging = task_vars.get("anta_logging")
-            if anta_logging:
+            if anta_logging := task_vars.get("anta_logging"):
                 setup_logging(level=anta_logging)
 
             # Creating the ANTA device object with the HttpApi connection session
             device = InventoryDeviceHttpApi(session=connection)
 
-            # Creating the catalog from the Ansible task
-            catalog_path = self._task.args.get("catalog_path")
-            with open(catalog_path, "r", encoding="UTF-8") as file:
-                input_catalog = safe_load(file)
+            # If anta_catalog is a dict of tests it will take precedence over anta_catalog_path
+            if isinstance((anta_catalog := self._task.args.get("anta_catalog")), dict):
+                input_catalog = anta_catalog
 
-            # Raises error if the provided ANTA test catalog is empty
-            if not input_catalog:
-                raise AnsibleError(f"The provided test catalog is empty: {catalog_path}")
+            # If anta_catalog is defaulted to "unset" or is empty, use the provided or the default anta_catalog_path
+            else:
+                catalog_path = self._task.args.get("anta_catalog_path")
+                with open(catalog_path, "r", encoding="UTF-8") as file:
+                    input_catalog = safe_load(file)
+
+                # Raises error if the provided ANTA test catalog is empty
+                if not input_catalog:
+                    raise AnsibleError(f"The provided test catalog is empty: {catalog_path}")
 
             # Update the input catalog with AVD structured_config
             updated_catalog = update_catalog(input_catalog, task_vars)
