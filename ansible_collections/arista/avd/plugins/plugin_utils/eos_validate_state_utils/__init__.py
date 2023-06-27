@@ -1,4 +1,3 @@
-from .catalog import update_catalog
-from .runner import run_tests
+from .catalog import update_tests
 
-__all__ = ["update_catalog", "run_tests"]
+__all__ = ["update_catalog"]

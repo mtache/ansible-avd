@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from ansible.errors import AnsibleError
+from typing import List, Tuple, Callable, Dict, Any
+from anta.result_manager.models import TestResult
 
 from ansible_collections.arista.avd.plugins.plugin_utils.utils.get import get
 
@@ -45,7 +47,7 @@ def _render_mapping(task_vars: dict, mapping: AVD_MAPPING) -> dict:
     return mapping
 
 
-def update_catalog(input_catalog: dict, task_vars: dict) -> dict:
+def update_tests(tests: List[Tuple[Callable[..., TestResult], Dict[Any, Any]]], task_vars: dict) -> List[Tuple[Callable[..., TestResult], Dict[Any, Any]]]:
     """
     Function to update an ANTA test catalog with parameters from Ansible AVD task_vars.
 
@@ -59,12 +61,8 @@ def update_catalog(input_catalog: dict, task_vars: dict) -> dict:
     """
     mapping = _render_mapping(task_vars, AVD_MAPPING)
 
-    for tests in input_catalog.values():
-        for test in tests:
-            if (test_name := list(test.keys())[0]) in mapping:
-                if test[test_name] is None:
-                    test[test_name] = {}
-                for param, value in mapping[test_name].items():
-                    test[test_name][param] = value
-
-    return input_catalog
+    for test in tests:
+        if (test_name := test[0].__name__) in mapping:
+            for param, value in mapping[test_name].items():
+                test[1][param] = value
+    return tests
