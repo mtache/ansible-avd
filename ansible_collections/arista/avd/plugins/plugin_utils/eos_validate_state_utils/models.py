@@ -9,7 +9,7 @@ from ansible.errors import AnsibleError
 from ansible_collections.ansible.netcommon.plugins.connection.httpapi import Connection
 from rich.pretty import pretty_repr
 
-from anta.inventory.models import AntaDevice
+from anta.device import AntaDevice
 from anta.models import AntaTestCommand
 from anta.tools.misc import exc_to_str, tb_to_str
 

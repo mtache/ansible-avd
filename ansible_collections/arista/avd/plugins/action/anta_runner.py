@@ -31,10 +31,8 @@ class ActionModule(ActionBase):
 
         try:
             # Setup ANTA logging
-            if anta_logging := task_vars.get("anta_logging"):
-                setup_logging(level=anta_logging)
-            else:
-                setup_logging()
+            anta_logging = task_vars.get("anta_logging", 'info')
+            setup_logging(level=anta_logging)
 
             inventory = AntaInventory()
 
